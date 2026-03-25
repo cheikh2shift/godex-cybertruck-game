@@ -297,7 +297,7 @@ function updateGame(deltaTime) {
             for (let j = 0; j < 15; j++) {
                 createParticle(powerup.position.clone(), particleColor);
             }
-            playSound && playSound('powerup');
+
             scene.remove(powerup);
             game.powerupItems.splice(i, 1);
         } else if (powerup.position.z > 25) {
