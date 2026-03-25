@@ -52,13 +52,35 @@ function createFallbackEnemy() {
 
 function spawnEnemy() {
     let enemy;
+    
+    // Find available lanes (not recently spawned within danger zone)
+    const dangerZoneZ = -50;
+    const nearbyEnemies = game.enemies.filter(e => e.position.z > dangerZoneZ);
+    
+    // Get lanes that have nearby enemies
+    const blockedLanes = new Set();
+    nearbyEnemies.forEach(e => {
+        LANES.forEach((lane, index) => {
+            if (Math.abs(e.position.x - lane) < 2) {
+                blockedLanes.add(index);
+            }
+        });
+    });
+    
+    // Build list of available lanes (leave at least one open)
+    let availableLanes = [0, 1, 2].filter(i => !blockedLanes.has(i));
+    if (availableLanes.length === 0) {
+        availableLanes = [0, 1, 2]; // All lanes blocked, pick randomly anyway
+    }
+    
+    const chosenLane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
+    
     if (usingEnemyModel && window.enemyModel) {
-        // Clone enemy model WITHOUT color changes - keep original texture
         enemy = window.enemyModel.clone();
-        enemy.position.set(LANES[Math.floor(Math.random() * 3)], 0, -150);
+        enemy.position.set(LANES[chosenLane], 0, -150);
     } else {
         enemy = createFallbackEnemy();
-        enemy.position.set(LANES[Math.floor(Math.random() * 3)], 0, -150);
+        enemy.position.set(LANES[chosenLane], 0, -150);
     }
     scene.add(enemy);
     game.enemies.push(enemy);
