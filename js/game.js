@@ -247,7 +247,7 @@ function updateGame(deltaTime) {
     
     // Spawn power-ups
     game.powerupSpawnTimer += deltaTime;
-    if (game.powerupSpawnTimer > 7) {
+    if (game.powerupSpawnTimer > 3) {
         spawnPowerup();
         game.powerupSpawnTimer = 0;
     }
@@ -291,11 +291,13 @@ function updateGame(deltaTime) {
         }
         
         if (checkCollision(game.player, powerup, 2.2)) {
-            activatePowerup(powerup.userData.type);
+            game.powerups[powerup.userData.type].count++;
+            updatePowerupUI();
             const particleColor = POWERUP_COLORS[powerup.userData.type] || 0xff00ff;
             for (let j = 0; j < 15; j++) {
                 createParticle(powerup.position.clone(), particleColor);
             }
+            playSound && playSound('powerup');
             scene.remove(powerup);
             game.powerupItems.splice(i, 1);
         } else if (powerup.position.z > 25) {
