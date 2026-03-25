@@ -39,6 +39,9 @@ async function init() {
     road = createRoad();
     scene.add(road);
     
+    // Road decorations
+    createRoadDecorations();
+    
     // Setup input
     setupInputListeners();
     

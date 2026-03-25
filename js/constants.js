@@ -6,7 +6,7 @@ const INITIAL_LIVES = 3;
 const game = {
     score: 0,
     speed: 0,
-    baseSpeed: 30,
+    baseSpeed: 50,
     isRunning: false,
     lives: INITIAL_LIVES,
     currentLane: 1,

@@ -3,6 +3,25 @@
 // Trail particles array
 let trailParticles = [];
 let trailTimer = 0;
+let cameraTilt = 0;
+let targetCameraTilt = 0;
+
+const TRAIL_COLORS = {
+    default: 0x00ffff,
+    shield: 0x00ff00,
+    boost: 0xffff00,
+    slowmo: 0x0088ff,
+    magnet: 0xff00ff
+};
+
+function getActiveTrailColor() {
+    for (const type of POWERUP_TYPES) {
+        if (game.powerups[type] && game.powerups[type].active) {
+            return TRAIL_COLORS[type];
+        }
+    }
+    return TRAIL_COLORS.default;
+}
 
 function checkCollision(obj1, obj2, distance = 3) {
     const dx = obj1.position.x - obj2.position.x;
@@ -83,10 +102,10 @@ function createParticle(position, color) {
 }
 
 // Trail particle system for player (tire effect)
-function createTrailParticle(x, z) {
+function createTrailParticle(x, z, color) {
     const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
     const material = new THREE.MeshBasicMaterial({ 
-        color: 0x00ffff,
+        color: color,
         transparent: true,
         opacity: 0.9
     });
@@ -114,17 +133,20 @@ function updateTrailParticles(deltaTime) {
     trailTimer += deltaTime;
     if (trailTimer > 0.04 && game.isRunning) { // Spawn every 40ms
         if (game.player) {
+            const trailColor = getActiveTrailColor();
             // Closer tire positions (closer to center)
             const offset = 1.0; // Tires closer together
             // Left tire
             createTrailParticle(
                 game.player.position.x - offset,
-                game.player.position.z
+                game.player.position.z,
+                trailColor
             );
             // Right tire
             createTrailParticle(
                 game.player.position.x + offset,
-                game.player.position.z
+                game.player.position.z,
+                trailColor
             );
         }
         trailTimer = 0;
@@ -175,6 +197,12 @@ function updateGame(deltaTime) {
     // Handle keyboard/touch input
     handleInput();
     
+    // Gradual speed increase based on score (only if not using boost or slowmo)
+    if (!game.powerups.boost.active && !game.powerups.slowmo.active) {
+        const level = Math.floor(game.score / 400);
+        game.speed = game.baseSpeed + level * 4;
+    }
+    
     // Update score
     game.score += game.speed * deltaTime * 0.5;
     document.getElementById('score').textContent = Math.floor(game.score);
@@ -185,9 +213,15 @@ function updateGame(deltaTime) {
     const dx = game.targetX - game.player.position.x;
     if (Math.abs(dx) > 0.1) {
         game.player.position.x += dx * moveSpeed;
+        targetCameraTilt = dx * 0.03;
     } else {
         game.player.position.x = game.targetX;
+        targetCameraTilt = 0;
     }
+    
+    // Smooth camera tilt
+    cameraTilt += (targetCameraTilt - cameraTilt) * 5 * deltaTime;
+    camera.rotation.z = cameraTilt;
     
     // Update trail particles
     updateTrailParticles(deltaTime);
@@ -195,11 +229,19 @@ function updateGame(deltaTime) {
     // Update particles
     updateParticles(deltaTime);
     
-    // Spawn enemies
+    // Update road decorations
+    updateRoadDecorations(deltaTime);
+    
+    // Spawn enemies based on level
     game.enemySpawnTimer += deltaTime;
-    const spawnInterval = Math.max(0.8, 2.5 - game.speed / 150);
-    if (game.enemySpawnTimer > spawnInterval) {
-        spawnEnemy();
+    const level = Math.floor(game.score / 400);
+    const spawnInterval = Math.max(0.5, 2.5 - level * 0.2);
+    const maxEnemies = 20;
+    const enemyCount = Math.min(15, 1 + Math.floor(level * 1.4));
+    if (game.enemySpawnTimer > spawnInterval && game.enemies.length < maxEnemies) {
+        for (let i = 0; i < enemyCount; i++) {
+            spawnEnemy();
+        }
         game.enemySpawnTimer = 0;
     }
     
@@ -250,8 +292,9 @@ function updateGame(deltaTime) {
         
         if (checkCollision(game.player, powerup, 2.2)) {
             activatePowerup(powerup.userData.type);
+            const particleColor = POWERUP_COLORS[powerup.userData.type] || 0xff00ff;
             for (let j = 0; j < 15; j++) {
-                createParticle(powerup.position.clone(), 0xff00ff);
+                createParticle(powerup.position.clone(), particleColor);
             }
             scene.remove(powerup);
             game.powerupItems.splice(i, 1);
