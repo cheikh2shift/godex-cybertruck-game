@@ -70,17 +70,20 @@ function spawnEnemy() {
     // Build list of available lanes (leave at least one open)
     let availableLanes = [0, 1, 2].filter(i => !blockedLanes.has(i));
     if (availableLanes.length === 0) {
-        availableLanes = [0, 1, 2]; // All lanes blocked, pick randomly anyway
+        availableLanes = [0, 1, 2];
     }
     
     const chosenLane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
     
+    // Random Z position so enemies are never aligned
+    const randomZ = -150 - Math.random() * 80;
+    
     if (usingEnemyModel && window.enemyModel) {
         enemy = window.enemyModel.clone();
-        enemy.position.set(LANES[chosenLane], 0, -150);
+        enemy.position.set(LANES[chosenLane], 0, randomZ);
     } else {
         enemy = createFallbackEnemy();
-        enemy.position.set(LANES[chosenLane], 0, -150);
+        enemy.position.set(LANES[chosenLane], 0, randomZ);
     }
     scene.add(enemy);
     game.enemies.push(enemy);

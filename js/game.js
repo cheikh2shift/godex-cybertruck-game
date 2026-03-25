@@ -236,7 +236,7 @@ function updateGame(deltaTime) {
     game.enemySpawnTimer += deltaTime;
     const level = Math.floor(game.score / 400);
     const spawnInterval = Math.max(0.5, 2.5 - level * 0.2);
-    const maxEnemies = 20;
+    const maxEnemies = 15;
     const enemyCount = Math.min(15, 1 + Math.floor(level * 1.4));
     if (game.enemySpawnTimer > spawnInterval && game.enemies.length < maxEnemies) {
         for (let i = 0; i < enemyCount; i++) {
