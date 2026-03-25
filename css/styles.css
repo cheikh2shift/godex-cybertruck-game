@@ -1,0 +1,189 @@
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            overflow: hidden; 
+            background: #000010;
+            font-family: 'Orbitron', 'Segoe UI', sans-serif;
+        }
+        #game-container { 
+            width: 100vw; 
+            height: 100vh; 
+            position: relative;
+        }
+        canvas { display: block; }
+        
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        #score-display {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ffff;
+            font-size: 28px;
+            font-weight: bold;
+            text-shadow: 0 0 15px #00ffff, 0 0 30px #00ffff, 0 0 45px #0088ff;
+            letter-spacing: 3px;
+        }
+        
+        #powerup-display {
+            position: absolute;
+            top: 70px;
+            left: 20px;
+            display: flex;
+            gap: 15px;
+        }
+        
+        .powerup-icon {
+            width: 60px;
+            height: 60px;
+            border: 3px solid #ffffff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 20px #ff00ff, inset 0 0 20px rgba(255, 0, 255, 0.3);
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .powerup-icon.active {
+            background: rgba(255, 255, 255, 0.9);
+            animation: pulse 0.3s infinite;
+            box-shadow: 0 0 40px #00ff00, 0 0 60px #00ff00;
+        }
+        
+        .powerup-icon .count {
+            position: absolute;
+            bottom: -8px;
+            right: -8px;
+            background: #ff00ff;
+            color: white;
+            font-size: 14px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        
+        #start-screen, #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            display: none;
+            pointer-events: auto;
+        }
+        
+        #start-screen h1, #game-over h1 {
+            color: #ffffff;
+            font-size: 56px;
+            text-shadow: 0 0 40px #00ffff, 0 0 80px #00ffff, 0 0 120px #0088ff;
+            margin-bottom: 15px;
+            letter-spacing: 8px;
+        }
+        
+        #start-screen h2 {
+            color: #ff00ff;
+            font-size: 32px;
+            text-shadow: 0 0 25px #ff00ff;
+            margin-bottom: 40px;
+        }
+        
+        #start-screen p {
+            color: #cccccc;
+            font-size: 18px;
+            margin-bottom: 25px;
+            line-height: 2;
+        }
+        
+        #game-over p {
+            color: #cccccc;
+            font-size: 28px;
+            margin-bottom: 40px;
+            text-shadow: 0 0 15px #00ffff;
+        }
+        
+        #game-over span {
+            color: #00ffff;
+            font-weight: bold;
+        }
+        
+        #start-btn, #restart-btn {
+            padding: 25px 80px;
+            font-size: 28px;
+            background: linear-gradient(45deg, #00ffff, #00ff88, #00ffff);
+            background-size: 200% 200%;
+            border: none;
+            border-radius: 40px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            transition: all 0.3s;
+            pointer-events: auto;
+            animation: glow 1.5s ease-in-out infinite, gradientShift 2s ease infinite;
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 30px #00ffff, 0 0 60px #00ffff; }
+            50% { box-shadow: 0 0 60px #00ffff, 0 0 100px #00ff88, 0 0 150px #0088ff; }
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        #start-btn:hover, #restart-btn:hover {
+            transform: scale(1.15);
+        }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ffff;
+            font-size: 28px;
+            text-shadow: 0 0 20px #00ffff;
+            animation: pulse 1s infinite;
+        }
+        
+        .controls-hint {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #888;
+            font-size: 16px;
+            text-shadow: 0 0 10px #666;
+        }
+        
+        #model-status {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00ff88;
+            font-size: 14px;
+            text-shadow: 0 0 10px #00ff88;
+        }
