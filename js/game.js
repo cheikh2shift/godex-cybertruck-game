@@ -1,4 +1,9 @@
 // Game Logic Module
+
+// Trail particles array
+let trailParticles = [];
+let trailTimer = 0;
+
 function checkCollision(obj1, obj2, distance = 3) {
     const dx = obj1.position.x - obj2.position.x;
     const dz = obj1.position.z - obj2.position.z;
@@ -24,6 +29,10 @@ function resetGame() {
     
     game.particles.forEach(p => scene.remove(p));
     game.particles = [];
+    
+    // Clear trail particles
+    trailParticles.forEach(p => scene.remove(p));
+    trailParticles = [];
     
     game.score = 0;
     game.speed = game.baseSpeed;
@@ -73,6 +82,77 @@ function createParticle(position, color) {
     game.particles.push(particle);
 }
 
+// Trail particle system for player (tire effect)
+function createTrailParticle(x, z) {
+    const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+    const material = new THREE.MeshBasicMaterial({ 
+        color: 0x00ffff,
+        transparent: true,
+        opacity: 0.9
+    });
+    const particle = new THREE.Mesh(geometry, material);
+    
+    // Position closer to center of truck, behind it
+    particle.position.set(
+        x + (Math.random() - 0.5) * 0.3,
+        0.5, // Low to the ground
+        z - 1.5 // Behind the truck
+    );
+    
+    particle.userData = {
+        life: 1.0,
+        velocityX: (Math.random() - 0.5) * 3,
+        velocityZ: 2 + Math.random() * 2 // Flow backward toward camera
+    };
+    
+    scene.add(particle);
+    trailParticles.push(particle);
+}
+
+function updateTrailParticles(deltaTime) {
+    // Spawn new trail particles at tire positions
+    trailTimer += deltaTime;
+    if (trailTimer > 0.04 && game.isRunning) { // Spawn every 40ms
+        if (game.player) {
+            // Closer tire positions (closer to center)
+            const offset = 1.0; // Tires closer together
+            // Left tire
+            createTrailParticle(
+                game.player.position.x - offset,
+                game.player.position.z
+            );
+            // Right tire
+            createTrailParticle(
+                game.player.position.x + offset,
+                game.player.position.z
+            );
+        }
+        trailTimer = 0;
+    }
+    
+    // Update existing trail particles
+    for (let i = trailParticles.length - 1; i >= 0; i--) {
+        const p = trailParticles[i];
+        
+        // Fade out
+        p.userData.life -= deltaTime * 1.2;
+        p.material.opacity = p.userData.life * 0.9;
+        
+        // Move backward toward camera
+        p.position.z += p.userData.velocityZ * deltaTime;
+        p.position.x += p.userData.velocityX * deltaTime;
+        
+        // Shrink as it fades
+        const scale = p.userData.life * 1.0;
+        p.scale.set(scale, scale * 0.4, scale); // Flatten more
+        
+        if (p.userData.life <= 0 || p.position.z > 20) {
+            scene.remove(p);
+            trailParticles.splice(i, 1);
+        }
+    }
+}
+
 function updateParticles(deltaTime) {
     for (let i = game.particles.length - 1; i >= 0; i--) {
         const p = game.particles[i];
@@ -108,6 +188,9 @@ function updateGame(deltaTime) {
     } else {
         game.player.position.x = game.targetX;
     }
+    
+    // Update trail particles
+    updateTrailParticles(deltaTime);
     
     // Update particles
     updateParticles(deltaTime);

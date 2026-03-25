@@ -1,72 +1,24 @@
 // Model Loader Module
 
-// Load DAE (Collada) model
-function loadDAEModel(path, isPlayer = false) {
-    return new Promise((resolve, reject) => {
-        const loader = new THREE.ColladaLoader();
-        
-        loader.load(
-            path,
-            (collada) => {
-                const object = collada.scene;
-                
-                object.traverse((child) => {
-                    if (child.isMesh) {
-                        if (child.material) {
-                            if (Array.isArray(child.material)) {
-                                child.material.forEach(mat => {
-                                    mat.metalness = 0.9;
-                                    mat.roughness = 0.1;
-                                });
-                            } else {
-                                child.material.metalness = 0.9;
-                                child.material.roughness = 0.1;
-                            }
-                        }
-                    }
-                });
-                
-                const box = new THREE.Box3().setFromObject(object);
-                const center = box.getCenter(new THREE.Vector3());
-                const size = box.getSize(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                const targetScale = 5 / maxDim;
-                
-                object.scale.setScalar(targetScale);
-                object.position.sub(center.multiplyScalar(targetScale));
-                object.position.y = isPlayer ? 9 : 0;
-                
-                resolve(object);
-            },
-            undefined,
-            (error) => {
-                console.error('Error loading DAE:', path, error);
-                reject(error);
-            }
-        );
-    });
-}
-
 // Load OBJ model
 function loadOBJModel(path, isPlayer = false) {
     return new Promise((resolve) => {
         const loader = new THREE.OBJLoader();
         
         const mtlPath = path.replace('.obj', '.mtl');
-        const hasMtl = !isPlayer;
         
         function processObject(object) {
             object.traverse((child) => {
                 if (child.isMesh) {
                     if (child.material && !child.material.map) {
-                        child.material.color.setHex(isPlayer ? 0x333333 : 0x333344);
+                        child.material.color.setHex(isPlayer ? 0xcccccc : 0x333344);
                     }
                     if (!child.material.map) {
                         child.material = new THREE.MeshStandardMaterial({
-                            color: isPlayer ? 0x333333 : 0x333344,
+                            color: isPlayer ? 0xcccccc : 0x333344,
                             metalness: 0.9,
                             roughness: 0.1,
-                            emissive: 0x111122,
+                            emissive: isPlayer ? 0x222222 : 0x111122,
                             emissiveIntensity: 0.4
                         });
                     }
@@ -78,37 +30,41 @@ function loadOBJModel(path, isPlayer = false) {
             const size = box.getSize(new THREE.Vector3());
             const maxDim = Math.max(size.x, size.y, size.z);
             
-            // Scale: player gets base 5 + 0.8 bonus, enemies get 18
+            // Player: scale 5.8, enemies: scale 18
             const baseScale = isPlayer ? 5.8 : 18;
             const targetScale = baseScale / maxDim;
             
             object.scale.setScalar(targetScale);
             object.position.sub(center.multiplyScalar(targetScale));
-            // Player raised higher above road
+            
+            // Player positioned above road and rotated 180 degrees
             object.position.y = isPlayer ? 12 : 0;
+            
+            // Rotate player 180 degrees around Y axis
+            if (isPlayer) {
+                object.rotation.y = Math.PI;
+            }
             
             resolve(object);
         }
         
-        if (hasMtl) {
-            const mtlLoader = new THREE.MTLLoader();
-            mtlLoader.load(
-                mtlPath,
-                (materials) => {
-                    materials.preload();
-                    loader.setMaterials(materials);
-                    loader.load(path, processObject, undefined, () => {
-                        loader.load(path, processObject);
-                    });
-                },
-                undefined,
-                () => {
+        // Try loading with MTL first
+        const mtlLoader = new THREE.MTLLoader();
+        mtlLoader.load(
+            mtlPath,
+            (materials) => {
+                materials.preload();
+                loader.setMaterials(materials);
+                loader.load(path, processObject, undefined, () => {
                     loader.load(path, processObject);
-                }
-            );
-        } else {
-            loader.load(path, processObject);
-        }
+                });
+            },
+            undefined,
+            () => {
+                // No MTL, load without textures
+                loader.load(path, processObject);
+            }
+        );
     });
 }
 
@@ -118,8 +74,8 @@ async function loadModels() {
     
     try {
         statusEl.textContent = 'Loading player model...';
-        // Using OBJ model with increased scale and height
-        const playerModel = await loadOBJModel('72-24-c4/C4/C4.obj', true);
+        // Using Tesla Cybertruck OBJ model
+        const playerModel = await loadOBJModel('uploads_files_6336105_Tesla_Cybertruck.obj', true);
         if (playerModel) {
             game.playerModel = playerModel;
             usingPlayerModel = true;
